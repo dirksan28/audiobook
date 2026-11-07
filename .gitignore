@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+
+# Generated audio
+*.mp3
+*.wav
