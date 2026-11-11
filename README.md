@@ -225,24 +225,6 @@ flowchart LR
 
 By default, `--docker auto` starts the managed container. With `--docker never --server-url URL`, the script skips Docker and sends the same `/health` and `/tts` HTTP requests to an external Kokoro server.
 
-Choose a training checkpoint from 1 to 10:
-
-```bash
-python3 tts_audiobook.py --engine kokoro \
-  --text-dir path/to/texts --kokoro-epoch 10
-```
-
-The managed container receives the selected checkpoint as `KOKORO_EPOCH`. A matching existing container is reused. If an existing container uses a different epoch, the script refuses to reuse it; add `--recreate` to replace that container while retaining the model volume.
-
-Change the host port:
-
-```bash
-python3 tts_audiobook.py --engine kokoro \
-  --text-dir path/to/texts --port 9000
-```
-
-Kokoro always listens on port `8000` inside the container. `--port 9000` maps host port `9000` to it.
-
 ## Piper
 
 Piper is the fastest and lightest option. Synthesis runs locally without Docker or a TTS-server connection; installation and model download may require internet access. Piper is CPU-only in this script, and `--gpu on` is rejected.
@@ -473,6 +455,8 @@ Run `python3 tts_audiobook.py --help` for the parser's complete help output.
 
 CosyVoice publishes the configured host port to the same container port and sets `PORT`. Kokoro maps the configured host port to its internal port `8000`.
 
+Kokoro passes `--kokoro-epoch` to the container as `KOKORO_EPOCH`. A matching existing container is reused; if the existing container uses a different epoch, recreate it with `--recreate`. The model volume is retained.
+
 ### Container Lifecycle
 
 - A running managed container is reused and is not restarted unless `--recreate` is set.
@@ -494,6 +478,8 @@ python3 tts_audiobook.py --engine kokoro \
 If you want to keep a server running, start it outside the script and use `--docker never`. The external server remains running after generation.
 
 ### Ports, Networks, and Recreation
+
+The default host port is `8000`. Use `--port PORT` if that port is already in use or if you need multiple TTS servers; for example, `--port 9000` maps host port `9000` to Kokoro's container port `8000`.
 
 With `--docker-network host`, the managed container is started without `-p` and listens directly on host port `8000`; `--port` must remain `8000`. Switching an existing container between bridge and host networking requires `--recreate`.
 
